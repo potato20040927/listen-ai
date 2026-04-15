@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  stat:
+    build: ./stat
+    container_name: stat
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./data:/data
+    environment:
+      - SQLITE_PATH=/data/listenai.db
+      - STAT_PORT=8002
+    restart: always
+
+  nlp:
+    build: ./nlp
+    container_name: nlp
+    ports:
+      - "8001:8001"
+
+  gateway:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - NLP_URL=http://nlp:8001
+      - STAT_URL=http://stat:8002
+    depends_on:
+      - stat
+      - nlp
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - GATEWAY_URL=http://gateway:8000
+    depends_on:
+      - gateway
